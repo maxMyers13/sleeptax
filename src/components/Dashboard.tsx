@@ -187,6 +187,40 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     });
   };
 
+  const handleShareInvite = async () => {
+    if (!group) return;
+    
+    const shareData = {
+      title: 'Join my Sleep Tax group!',
+      text: `Join "${group.name}" on Sleep Tax! Use code: ${group.code}`,
+      url: window.location.origin,
+    };
+
+    // Try native share first (works great on mobile)
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch (err) {
+        // User cancelled or share failed, fall back to clipboard
+        if ((err as Error).name === 'AbortError') return;
+      }
+    }
+
+    // Fallback: copy to clipboard
+    try {
+      await navigator.clipboard.writeText(`Join "${group.name}" on Sleep Tax!\n\nCode: ${group.code}\n${window.location.origin}`);
+      // Show brief toast feedback
+      const toast = document.createElement('div');
+      toast.className = 'fixed bottom-24 left-1/2 -translate-x-1/2 bg-sky-500 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg z-50 animate-fade-in';
+      toast.textContent = '✓ Invite copied!';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2000);
+    } catch {
+      alert(`Share this code with friends: ${group.code}`);
+    }
+  };
+
   // --- RENDER HELPERS ---
 
   if (loading) {
@@ -288,7 +322,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
           <h1 className="text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: COLORS.accent.gradient }}>
             {group.name}
           </h1>
-          <p className="text-sm text-slate-400">Week #{week.weekNumber} • Code: {group.code}</p>
+          <button 
+            onClick={handleShareInvite}
+            className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-sky-400 transition-colors group"
+          >
+            <span>Week #{week.weekNumber}</span>
+            <span className="text-slate-600">•</span>
+            <span className="font-mono bg-slate-800 px-2 py-0.5 rounded text-xs group-hover:bg-sky-900/50 transition-colors">
+              {group.code}
+            </span>
+            <svg className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
         </div>
         <div className="h-10 w-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center overflow-hidden">
           <img src={user.avatarUrl} alt="Me" className="h-full w-full object-cover" />
