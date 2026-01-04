@@ -134,6 +134,19 @@ export const supabaseService = {
 
     await supabaseService.ensureProfile();
 
+    // Check group creation limit (max 3 groups, unless admin)
+    const isAdmin = user.email?.toLowerCase() === 'max@linkedInorleftout.com';
+    if (!isAdmin) {
+      const { count } = await supabase
+        .from('groups')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id);
+      
+      if (count !== null && count >= 3) {
+        throw new Error('You can only create up to 3 groups');
+      }
+    }
+
     // Generate unique code
     const code = `${name.toUpperCase().replace(/\s/g, '').slice(0, 4)}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
 
