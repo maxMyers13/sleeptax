@@ -18,6 +18,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [logModalOpen, setLogModalOpen] = useState(false);
   const [sleepHours, setSleepHours] = useState(7);
+  const [sleepMinutes, setSleepMinutes] = useState(0);
   const [logLoading, setLogLoading] = useState(false);
 
   // Calculate week start date (7 days ago)
@@ -49,9 +50,14 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
     setLogLoading(true);
     try {
       const today = new Date().toISOString().split('T')[0];
-      await supabaseService.logSleep(today, sleepHours);
+      // Combine hours and minutes into decimal hours
+      const totalHours = sleepHours + (sleepMinutes / 60);
+      await supabaseService.logSleep(today, totalHours);
       await loadData();
       setLogModalOpen(false);
+      // Reset to defaults
+      setSleepHours(7);
+      setSleepMinutes(0);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Failed to log sleep');
     } finally {
@@ -181,22 +187,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
           <Card className="w-full max-w-sm">
             <h2 className="text-white font-semibold text-xl mb-4">Log Sleep</h2>
-            <p className="text-slate-400 text-sm mb-4">How many hours did you sleep last night?</p>
+            <p className="text-slate-400 text-sm mb-6">How long did you sleep last night?</p>
             
-            <div className="flex items-center justify-center gap-4 mb-6">
-              <button 
-                onClick={() => setSleepHours(Math.max(0, sleepHours - 0.5))}
-                className="w-12 h-12 rounded-full bg-[#1F2937] text-white text-xl font-bold hover:bg-[#374151] transition-colors"
-              >
-                -
-              </button>
-              <span className="text-white text-4xl font-bold w-20 text-center">{sleepHours}</span>
-              <button 
-                onClick={() => setSleepHours(Math.min(24, sleepHours + 0.5))}
-                className="w-12 h-12 rounded-full bg-[#1F2937] text-white text-xl font-bold hover:bg-[#374151] transition-colors"
-              >
-                +
-              </button>
+            {/* Hours */}
+            <div className="mb-4">
+              <p className="text-slate-500 text-xs uppercase tracking-wide mb-2 text-center">Hours</p>
+              <div className="flex items-center justify-center gap-4">
+                <button 
+                  onClick={() => setSleepHours(Math.max(0, sleepHours - 1))}
+                  className="w-12 h-12 rounded-full bg-[#1F2937] text-white text-xl font-bold hover:bg-[#374151] transition-colors"
+                >
+                  -
+                </button>
+                <span className="text-white text-4xl font-bold w-16 text-center">{sleepHours}</span>
+                <button 
+                  onClick={() => setSleepHours(Math.min(24, sleepHours + 1))}
+                  className="w-12 h-12 rounded-full bg-[#1F2937] text-white text-xl font-bold hover:bg-[#374151] transition-colors"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* Minutes */}
+            <div className="mb-6">
+              <p className="text-slate-500 text-xs uppercase tracking-wide mb-2 text-center">Minutes</p>
+              <div className="flex items-center justify-center gap-4">
+                <button 
+                  onClick={() => setSleepMinutes(Math.max(0, sleepMinutes - 15))}
+                  className="w-12 h-12 rounded-full bg-[#1F2937] text-white text-xl font-bold hover:bg-[#374151] transition-colors"
+                >
+                  -
+                </button>
+                <span className="text-white text-4xl font-bold w-16 text-center">{sleepMinutes}</span>
+                <button 
+                  onClick={() => setSleepMinutes(Math.min(45, sleepMinutes + 15))}
+                  className="w-12 h-12 rounded-full bg-[#1F2937] text-white text-xl font-bold hover:bg-[#374151] transition-colors"
+                >
+                  +
+                </button>
+              </div>
+              <p className="text-slate-600 text-xs text-center mt-2">
+                Total: {sleepHours}h {sleepMinutes}m
+              </p>
             </div>
             
             <div className="flex gap-3">
