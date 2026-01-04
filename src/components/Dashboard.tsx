@@ -336,7 +336,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ user }) => {
         ) : (
           leaderboard.map((entry, index) => {
             const isLast = index === leaderboard.length - 1;
-            const isDanger = isLast || (leaderboard.length > 3 && index === leaderboard.length - 2);
+            // Only show Tax Risk if there are at least 2 people
+            const isDanger = leaderboard.length >= 2 && (isLast || (leaderboard.length > 3 && index === leaderboard.length - 2));
             
             return (
               <div 
